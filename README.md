@@ -112,6 +112,22 @@ I found that this task showed me how filtering isolates different types of traff
 
 The syntax for using the filter to narrow down a specific Ip addres is ip.addr == 192.168.79.130
 
+## 4. [Right Click TCP packet/Follow TCP stream to read a full conversation]
+[For this task I dove further into breaking down the packets generated in Metasploitable. Specifically I looked into a TCP packet by right clicking one of the packets and clicking the option to "follow TCP stream". By doing this it allowed me to read the full conversation being sent between the host and the target which displayed valuable information.]
+
+
+Output
+
+The output first displays the HTTP request sent from Kali to metasploitable, followed by the server's response. This included the full HTTP response, headers, and page content. Also displayed was the server banner, a warning, msf developer contact information, and login info all in  clear text. There is also some HTML code which indicated Metasploitable's homepage is acting as a directory of vulnerable web applications hosted on the target machine, such as TWiki, phpMyAdmin, Mutillidae, DVWA, and WebDAV.
+
+<img width="574" height="403" alt="Screenshot 2026-07-22 120250" src="https://github.com/user-attachments/assets/2ebe13a5-ca45-4055-9145-5cf614cd79c8" />
+
+
+##Findings 
+
+GET / HTTP/1.1 - The most basic request a browser can make which essentially means "give me whatever the default page is at this address." The response confirms it by showing: <title>Metasploitable2 - Linux</title> which is what you see when visiting the target's IP address in the web browser. This confirms that requesting the root path returns the server's default file (index.html = home page)
+More importantly, as I stated earlier this page exposed sensitive information in plaintext, including the Apache/PHP version banners, developer contact info, and default login credentials (msfadmin/msfadmin) all readable in the HTTP response body. This is a good example of a key risk of using unencrypted protocols because anyone capturing this traffic can also read this sensitive information without needing to break any encryption.
+
 
 📊 Key Findings Summary
 Port/Service	Tool Used	Risk Level	Notes
