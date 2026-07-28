@@ -29,10 +29,9 @@ This repository documents a series of assessments run inside my isolated Vmware 
 
 ## 🛠️ Tools Used
 
-- **[Wireshark]** — [What it does]
-- **[Tool 2]** — [What it does]
-- **[Tool 3]** — [What it does]
-- **[Tool 4]** — [What it does]
+- **Wireshark** — GUI-based packet capture and analysis tool used to capture, filter, and reconstruct network traffic
+- **Nmap** — Used alongside Wireshark to generate TCP traffic (SYN/RST behavior) for packet-level analysis
+- **Ping (ICMP)** — Used to generate simple, observable ICMP traffic for comparison against TCP behavior
 
 ---
 
@@ -130,36 +129,29 @@ More importantly, as I stated earlier this page exposed sensitive information in
 
 
 📊 Key Findings Summary
-Port/Service	Tool Used	Risk Level	Notes
-[e.g. 21/tcp FTP]	[e.g. Nmap]	🔴 Critical	[Notes]
-[e.g. 23/tcp Telnet]	[e.g. Wireshark]	🔴 Critical	[Notes]
-[e.g. 80/tcp HTTP]	[e.g. Nikto]	🟠 High	[Notes]
-[e.g. 3306/tcp MySQL]	[e.g. OpenVAS]	🟠 High	[Notes]
-[e.g. 22/tcp SSH]	[e.g. Nmap]	🟡 Medium	[Notes]
-Risk Levels: 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low
+
+| Port/Service | Tool Used | Risk Level | Notes |
+|---|---|---|---|
+| 80/tcp HTTP | Wireshark (Follow TCP Stream) | 🔴 Critical | Full HTTP request/response readable in plaintext, including default credentials (msfadmin/msfadmin) and server version banners |
+| N/A (background traffic) | Wireshark | 🟢 Low | DNS/NTP queries failing due to isolated network — background noise, not a vulnerability, but must be filtered out to avoid confusion during analysis |
+
+**Risk Levels:** 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low
 
 🗺️ MITRE ATT&CK Mapping
-Action Performed	ATT&CK Tactic	Technique ID	Technique Name
-[e.g. Port scanning]	[e.g. Reconnaissance]	[e.g. T1595]	[e.g. Active Scanning]
-[Action]	[Tactic]	[ID]	[Technique]
-[Action]	[Tactic]	[ID]	[Technique]
-[Action]	[Tactic]	[ID]	[Technique]
+
+| Action Performed | ATT&CK Tactic | Technique ID | Technique Name |
+|---|---|---|---|
+| Packet capture and traffic analysis | Reconnaissance | T1040 | Network Sniffing |
+| Reconstructing HTTP session via Follow TCP Stream | Credential Access | T1040 | Network Sniffing |
+| Filtering traffic by protocol/host to isolate relevant data | Reconnaissance | T1595 | Active Scanning |
+
 🛡️ Defensive Recommendations
 Based on findings, the following remediations would be recommended in a real environment:
 
-[Finding 1] — [Recommendation]
-[Finding 2] — [Recommendation]
-[Finding 3] — [Recommendation]
-[Finding 4] — [Recommendation]
-[Finding 5] — [Recommendation]
-📚 CySA+ Exam Relevance
-This lab directly maps to the following CompTIA CySA+ (CS0-003) exam domains:
+1. **HTTP transmits data in plaintext (Critical)** — Enforce HTTPS/TLS for all web services to prevent credentials and session data from being readable in captured traffic.
+2. **Default credentials exposed on webpage** — Remove hardcoded default login information from any production-facing page.
+3. **Background system noise can obscure real traffic** — Establish a baseline of expected network chatter (DNS, NTP, ARP) so analysts can quickly distinguish it from genuine anomalies during an investigation.
 
-Domain	Coverage
-Security Operations (33%)	[What this lab covers in this domain]
-Vulnerability Management (30%)	[What this lab covers in this domain]
-Incident Response (20%)	[What this lab covers in this domain]
-Reporting & Communication (17%)	[What this lab covers in this domain]
 🔑 Technical Notes
 [Any important notes about your lab setup, workarounds, or lessons learned. Example:
 
@@ -168,15 +160,34 @@ Reporting & Communication (17%)	[What this lab covers in this domain]
 -sP and -sT contradict eachother (Can't be used together because -sP means just do a ping/host-discovery sweep, skip ports entirely but -sT tells Nmap to do a full TCP connect port scan. These commands contradict eachother.)
 
 # Any important commands or workarounds
-[command here]
+
+# Filter to show only traffic to/from a specific host
+ip.addr == 192.168.79.130
+
+# Generate simple ICMP traffic for analysis
+ping 192.168.79.130
+
+# Generate TCP traffic (SYN/RST behavior) for analysis
+nmap -F -n 192.168.79.130
+
+# Workaround: Wireshark's display filter bar requires structured syntax —
+# a bare IP address alone (e.g. "192.168.79.130") is invalid. Always use
+# a field comparison like ip.addr == <IP>, using double equals (==), not
+# a single "=".
+
+# To read a full application-layer conversation (e.g. HTTP) instead of individual packets: right-click a TCP packet → Follow → TCP Stream
+
 📌 About This Project
-[1-2 sentences about how this fits into your overall portfolio and career goals.]
+[This repository is part of my broader cybersecurity portfolio, focused on building hands-on packet analysis skills using Wireshark — from basic traffic capture through reconstructing full application-layer conversations to identify real security risks like plaintext credential exposure.]
 
 Related repositories:
 
-[Repo Name] — [Brief description]
-[Repo Name] — [Brief description]
-[Repo Name] — Coming soon
+- `Nmap-Host-Discovery-and-Lab-Baseline` — Established a baseline of the lab network using ping sweeps and host discovery, documenting the target environment before deeper scanning began
+- `Nmap-Scan-Types-SYN-vs-TCP-vs-UDP` — Compared SYN, TCP connect, and UDP scan types against the target, examining differences in speed, stealth, and reliability
+- `Service-Version-Detection-and-OS-Fingerprinting` — Identified exact software versions on Metasploitable and researched real CVEs tied to them
+- `Nmap-Scripting-Engine` — Used Nmap's scripting engine to detect and, in one case, actively exploit a vulnerability referenced in this repo's findings
+- `TCPDump-CLI-Packet-Capture` — Captured the same kind of traffic from the command line, including a live Telnet session showing plaintext credential exposure
+
 👤 Author
 Dashane James
 Senior Field Service Technician → Cybersecurity Analyst
